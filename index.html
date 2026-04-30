@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Book Radar — Young Fiction</title>
+<title>Book Radar — Early Readers</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -129,7 +129,7 @@ button.secondary:hover{border-color:var(--ink);color:var(--ink)}
   <!-- Single lookup tab -->
   <div class="tab-panel active" id="tab-lookup">
     <div class="intro">
-      <p>Enter a title and author. Claude will tell you whether it's <strong>worth the committee's time to read</strong> — ruthlessly filtered against your 2024–25 sell-through history and what actually works for K–3 independent readers.</p>
+      <p>Enter a title and author. We'll tell you whether it's <strong>worth the committee's time to read</strong>, based on historic sell-through data and what actually works for K–3 independent readers.</p>
     </div>
     <div class="lookup-row">
       <input type="text" id="lookupTitle" placeholder="Title" onkeydown="if(event.key==='Enter')doLookup()">
@@ -250,8 +250,10 @@ Trusted authors: Erin Hunter Warriors/Survivors/Renegades, Katherine Applegate, 
 YA/teen romance/horror: always skip
 English-language only: non-English editions always skip
 
+For SINGLE title lookups: you have web search available. Use it to look up the book's description, target age range, genre, series info, and any early buzz. A brand new book from an unproven author might still be a great pick if it has a compelling concept, strong reviews, or the right fit for K-3 independent readers. Factor this research into your verdict — don't just rely on author track record alone.
+
 OUTPUT FORMAT - respond ONLY with valid JSON no markdown:
-For single title: {"verdict":"slam"|"yes"|"maybe"|"skip","title":"string","author":"string","pubdate":"if known","reason":"2-3 direct sentences referencing benchmarks","signals":["signal1","signal2"]}
+For single title: {"verdict":"slam"|"yes"|"maybe"|"skip","title":"string","author":"string","pubdate":"if known","reason":"2-3 direct sentences. For single lookups, reference what you found about the book — its concept, age range, format, early reception. Be specific.","signals":["signal1","signal2"]}
 For batch: {"summary":"2-3 sentences on catalog","books":[{"title":"string","author":"string","pubdate":"if available","verdict":"slam"|"yes"|"maybe"|"skip","reason":"1-2 direct sentences","signals":["signal1"]}]}`;
 
 let loadedTitles = [];
@@ -275,7 +277,8 @@ async function doLookup() {
   document.getElementById('lookupError').classList.remove('active');
   document.getElementById('verdictCard').classList.remove('active');
   document.getElementById('loading').classList.add('active');
-  document.getElementById('loadingMsg').textContent = 'Screening "' + title + '"...';
+  document.getElementById('loadingMsg').textContent = 'Researching "' + title + '"...';
+  document.getElementById('loadingSub').textContent = 'Looking up book details before screening';
   document.getElementById('loadingSub').textContent = '';
   try {
     const prompt = 'Single title lookup:\nTitle: ' + title + (author ? '\nAuthor: ' + author : '');
@@ -284,13 +287,16 @@ async function doLookup() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
+        max_tokens: 2000,
         system: SYSTEM_PROMPT,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
         messages: [{ role: 'user', content: prompt }]
       })
     });
     const data = await res.json();
-    const text = (data.content || []).map(b => b.text || '').join('');
+    // Extract only text blocks (skip tool_use and tool_result blocks)
+    const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text || '').join('');
+    if (data.error) throw new Error('API error: ' + JSON.stringify(data.error));
     const clean = text.replace(/`{3}json|`{3}/g, '').trim();
     const parsed = JSON.parse(clean);
     renderVerdict(parsed);
