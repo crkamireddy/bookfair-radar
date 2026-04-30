@@ -319,8 +319,15 @@ function handleFile(file) {
           result.push(cur.trim());
           return result;
         });
-        var headers0 = rows[0].map(function(h) { return String(h||"").toLowerCase(); });
-        ti = headers0.findIndex(function(h) { return h.includes("title"); });
+        // CSV: find columns by header name, defaulting to Title=0, Author=1, PubDate=2
+        var csvHeaders = rows[0].map(function(h) { return String(h||"").toLowerCase(); });
+        ti = csvHeaders.findIndex(function(h) { return h.includes("title"); });
+        if (ti === -1) ti = 0;
+        ai = csvHeaders.findIndex(function(h) { return h.includes("author"); });
+        if (ai === -1) ai = 1;
+        di = csvHeaders.findIndex(function(h) { return h.includes("pub"); });
+        if (di === -1) di = 2;
+        // Skip format/price/catalog filtering for CSVs
       } else {
         var wb = XLSX.read(e.target.result, { type: "binary" });
         for (var ni = 0; ni < wb.SheetNames.length; ni++) {
@@ -372,13 +379,18 @@ function handleFile(file) {
           }
         }
         if (pubYear && pubYear < 2026) { filteredOutCount++; continue; }
-        if (SKIP_FMT.indexOf(fmt) !== -1) { filteredOutCount++; continue; }
-        if (price === 0) { filteredOutCount++; continue; }
+        // Format/price/catalog filters only apply to XLS files
+        if (!isCSV) {
+          if (fi >= 0 && SKIP_FMT.indexOf(fmt) !== -1) { filteredOutCount++; continue; }
+          if (pi >= 0 && price === 0) { filteredOutCount++; continue; }
+        }
         var skipKW = false;
         for (var ki = 0; ki < SKIP_KW.length; ki++) { if (title.includes(SKIP_KW[ki])) { skipKW = true; break; } }
         if (skipKW) { filteredOutCount++; continue; }
         var skipCat = false;
-        for (var sci = 0; sci < SKIP_CATALOGS.length; sci++) { if (catalog.includes(SKIP_CATALOGS[sci])) { skipCat = true; break; } }
+        if (!isCSV && ci >= 0) {
+          for (var sci = 0; sci < SKIP_CATALOGS.length; sci++) { if (catalog.includes(SKIP_CATALOGS[sci])) { skipCat = true; break; } }
+        }
         if (skipCat) { filteredOutCount++; continue; }
         var skipLang = false;
         var titleLower = title.toLowerCase();
