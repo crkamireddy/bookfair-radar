@@ -164,17 +164,14 @@ button.secondary:hover{border-color:var(--ink);color:var(--ink)}
     <div class="intro">
       <p>Upload an Edelweiss or publisher XLS or CSV. Claude will <strong>ruthlessly filter</strong> to only the titles worth your committee's reading time — picture books, board books, YA, promo items, and anything unlikely to work for K–3 independent readers are cut automatically.</p>
     </div>
-    <div class="drop-zone" id="dropZone" style="position:relative">
-      <input type="file" id="fileInput" accept=".xls,.xlsx,.csv"
-        onchange="handleFile(this.files[0])"
-        style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:10">
+    <div class="drop-zone" id="dropZone">
       <div class="drop-icon">📂</div>
       <div class="drop-title">Drop your catalog file here</div>
       <div class="drop-sub">.xls, .xlsx, or .csv from Edelweiss or publisher reps</div>
-      <button onclick="event.stopPropagation();document.getElementById('fileInput').click()" 
-        style="margin-top:16px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:10px 22px;background:var(--ink);color:var(--paper);border:none;border-radius:2px;cursor:pointer;position:relative;z-index:20">
+      <label for="fileInput" style="display:inline-block;margin-top:16px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:10px 22px;background:var(--ink);color:var(--paper);border-radius:2px;cursor:pointer;">
         Browse files
-      </button>
+      </label>
+      <input type="file" id="fileInput" accept=".xls,.xlsx,.csv" onchange="handleFile(this.files[0])" style="display:none">
     </div>
     <div class="file-loaded" id="fileLoaded">
       <div><div class="fname" id="fileName"></div><div class="fmeta" id="fileMeta"></div></div>
