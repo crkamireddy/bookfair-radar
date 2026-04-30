@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Book Radar — Early Readers</title>
+<title>Book Radar — Young Fiction</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -129,11 +129,14 @@ button.secondary:hover{border-color:var(--ink);color:var(--ink)}
   <!-- Single lookup tab -->
   <div class="tab-panel active" id="tab-lookup">
     <div class="intro">
-      <p>Enter a title and author. We'll tell you whether it's <strong>worth the committee's time to read</strong>, based on historic sell-through data and what actually works for K–3 independent readers.</p>
+      <p>Enter a title and author. Claude will tell you whether it's <strong>worth the committee's time to read</strong> — ruthlessly filtered against your 2024–25 sell-through history and what actually works for K–3 independent readers.</p>
     </div>
     <div class="lookup-row">
       <input type="text" id="lookupTitle" placeholder="Title" onkeydown="if(event.key==='Enter')doLookup()">
       <input type="text" id="lookupAuthor" placeholder="Author (optional)" onkeydown="if(event.key==='Enter')doLookup()">
+    </div>
+    <div class="lookup-row">
+      <input type="text" id="lookupPubdate" placeholder="Pub date (optional — e.g. May 2026)" style="max-width:260px" onkeydown="if(event.key==='Enter')doLookup()">
     </div>
     <div style="display:flex;gap:10px">
       <button class="primary" id="lookupBtn" onclick="doLookup()">Check this title</button>
@@ -217,7 +220,12 @@ const SYSTEM_PROMPT = `You are a ruthless screener for a K-3 school book fair co
 
 The committee reads books before deciding to stock them. Your job is to filter down a catalog to only the titles genuinely worth their reading time. Be harsh. A title should only make the "read it" list if there is a real reason to believe it could be a standout for independent readers K-3.
 
-TARGET READER: K-3 independent readers. Think: early chapter books, graphic novels, beginning chapter series, accessible middle-grade. NOT picture books, NOT YA, NOT board books.
+TARGET READER: The full K-3 spectrum — from early emergent readers (K-1) who need simple sentences and lots of illustrations, all the way to confident chapter book readers (2-3). This includes:
+- Early readers and beginning chapter books (e.g. I Can Read Level 3, Step into Reading Level 3-4, Hello Reader)
+- Graphic novels and illustrated chapter books (high visual appeal, accessible for struggling readers)
+- Series chapter books with short chapters and illustrations (great for reluctant readers)
+- Accessible middle-grade for advanced 2-3 readers
+The committee deliberately stocks books for kids who struggle AND kids who devour books. "Younger end for independent readers" or "guided reader format" is NOT a reason to skip — it may be exactly what a struggling K-1 reader needs. Only skip if the format is clearly YA/middle school+, or a board book. Picture books are handled by a separate committee — skip those regardless of reading level.
 
 YOUR BENCHMARK DATA:
 
@@ -239,16 +247,20 @@ Any new installment of: Big Nate, Wimpy Kid, Dog Man, BSC Graphic Novels, BSC Li
 - Sequel in series with mixed history
 
 === SKIP criteria (verdict: skip) ===
-- Already a proven auto-stock
-- Late entry in declining series
-- Picture book, board book, activity book, YA, coloring book
+- Already a proven auto-stock (slam dunks)
+- Late entry in a clearly declining series
+- Pure picture book or board book (no words/minimal text, pre-reader)
+- YA/teen content (middle school+)
+- Activity book, coloring book
 - Celebrity author with no fiction track record
-- Too young or too old for fair
-- Generic series filler
+- Generic series filler with nothing distinctive
+- Do NOT skip just because a book targets younger or struggling readers — that is a feature, not a flaw
 
 Trusted authors: Erin Hunter Warriors/Survivors/Renegades, Katherine Applegate, Erin Entrada Kelly, Dan Gutman, Chris Grabenstein
 YA/teen romance/horror: always skip
 English-language only: non-English editions always skip
+- 2026 publications only: if the pub date is 2025 or earlier, verdict must be skip with reason citing the pub date — we only consider new 2026 titles for the fair
+- If the user supplies a pub date, treat it as authoritative and override anything found via web search
 
 For SINGLE title lookups: you have web search available. Use it to look up the book's description, target age range, genre, series info, and any early buzz. A brand new book from an unproven author might still be a great pick if it has a compelling concept, strong reviews, or the right fit for K-3 independent readers. Factor this research into your verdict — don't just rely on author track record alone.
 
@@ -281,7 +293,8 @@ async function doLookup() {
   document.getElementById('loadingSub').textContent = 'Looking up book details before screening';
   document.getElementById('loadingSub').textContent = '';
   try {
-    const prompt = 'Single title lookup:\nTitle: ' + title + (author ? '\nAuthor: ' + author : '');
+    const pubdate = document.getElementById('lookupPubdate').value.trim();
+    const prompt = 'Single title lookup:\nTitle: ' + title + (author ? '\nAuthor: ' + author : '') + (pubdate ? '\nPub date (user-supplied, treat as authoritative): ' + pubdate : '');
     const res = await fetch('https://book-radar-worker.catreading.workers.dev', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -298,10 +311,28 @@ async function doLookup() {
     const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text || '').join('');
     if (data.error) throw new Error('API error: ' + JSON.stringify(data.error));
     const clean = text.replace(/`{3}json|`{3}/g, '').trim();
-    const parsed = JSON.parse(clean);
+    if (!clean) throw new Error('JSON parse failed: empty response');
+    let parsed;
+    try {
+      parsed = JSON.parse(clean);
+    } catch(je) {
+      // Claude returned plain text instead of JSON — probably couldn't find the book
+      const notFound = clean.toLowerCase().includes('not find') || clean.toLowerCase().includes('no results') || clean.toLowerCase().includes('couldn't find');
+      throw new Error(notFound
+        ? 'JSON parse failed: not found'
+        : 'JSON parse failed: ' + je.message);
+    }
     renderVerdict(parsed);
   } catch (err) {
-    document.getElementById('lookupError').textContent = 'Something went wrong. Try again.';
+    let msg = 'Something went wrong. Try again.';
+    if (err.message && err.message.includes('not found')) {
+      msg = 'Couldn't find this title online. Double-check the spelling or try adding the author name.';
+    } else if (err.message && err.message.includes('JSON parse failed')) {
+      msg = 'Got an unexpected response for this title. Try being more specific — add the author or series name.';
+    } else if (err.message && err.message.includes('API error')) {
+      msg = 'API error — check your connection and try again.';
+    }
+    document.getElementById('lookupError').textContent = msg;
     document.getElementById('lookupError').classList.add('active');
   } finally {
     document.getElementById('loading').classList.remove('active');
@@ -403,6 +434,7 @@ function handleFile(file) {
       function hasSpanishChars(s) { return /[áéíóúüñ¡¿]/i.test(s); }
 
       loadedTitles = [];
+      let filteredOutCount = 0;
       for (let r = 1; r < rows.length; r++) {
         const row = rows[r];
         const title = String(row[ti] || '').trim();
@@ -413,19 +445,23 @@ function handleFile(file) {
         const catalog = ci >= 0 ? String(row[ci] || '').trim() : '';
 
         if (!title) continue;
-        if (SKIP_FMT.has(fmt)) continue;
-        if (price === 0) continue;
-        if (SKIP_KW.some(k => title.includes(k))) continue;
-        if (SKIP_CATALOGS.some(k => catalog.includes(k))) continue;
-        if (SKIP_LANG.some(k => title.toLowerCase().includes(k.toLowerCase()))) continue;
-        if (hasSpanishChars(title)) continue;
+        // Skip anything not published in 2026
+        const pubYear = pubdate ? parseInt(pubdate.split('/').pop()) : 0;
+        if (pubYear && pubYear < 2026) { filteredOutCount++; continue; }
+        if (SKIP_FMT.has(fmt)) { filteredOutCount++; continue; }
+        if (price === 0) { filteredOutCount++; continue; }
+        if (SKIP_KW.some(k => title.includes(k))) { filteredOutCount++; continue; }
+        if (SKIP_CATALOGS.some(k => catalog.includes(k))) { filteredOutCount++; continue; }
+        if (SKIP_LANG.some(k => title.toLowerCase().includes(k.toLowerCase()))) { filteredOutCount++; continue; }
+        if (hasSpanishChars(title)) { filteredOutCount++; continue; }
 
         loadedTitles.push({ title, author, format: fmt, price, pubdate });
       }
 
+      window.filteredOutCount = filteredOutCount;
       document.getElementById('fileLoaded').classList.add('active');
       document.getElementById('fileName').textContent = file.name;
-      document.getElementById('fileMeta').textContent = loadedTitles.length + ' titles loaded';
+      document.getElementById('fileMeta').textContent = loadedTitles.length + ' titles to screen (' + filteredOutCount + ' non-applicable titles removed)';
       document.getElementById('filters').classList.add('active');
       document.getElementById('analyzeFileBtn').disabled = false;
       document.getElementById('fileHint').textContent = loadedTitles.length + ' titles ready';
@@ -505,10 +541,20 @@ async function analyzeFile() {
       allBooks = allBooks.concat(parsed.books || []);
     }
     document.getElementById('progressFill').style.width = '100%';
+    // Deduplicate — keep first occurrence of each title (earlier batches win)
+    const seen = new Set();
+    allBooks = allBooks.filter(b => {
+      const key = b.title.toLowerCase().trim();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
     const slc = allBooks.filter(b => b.verdict === 'slam').length;
     const yc = allBooks.filter(b => b.verdict === 'yes').length;
     const mc = allBooks.filter(b => b.verdict === 'maybe').length;
-    const summary = 'From ' + allBooks.length + ' titles screened: ' + slc + ' slam dunks to auto-stock, ' + yc + ' worth reading before the fair, ' + mc + ' to keep on your radar. Everything else is cut.';
+    const skipCount = allBooks.filter(b => b.verdict === 'skip').length;
+    const filteredOut = window.filteredOutCount || 0;
+    const summary = 'From ' + allBooks.length + ' titles screened: ' + slc + ' slam dunks, ' + yc + ' to read, ' + mc + ' to watch, ' + skipCount + ' not a fit for this fair. ' + (filteredOut > 0 ? filteredOut + ' titles were automatically removed (board books, puzzles, picture books, non-English editions, etc.) and are not shown.' : '');
     lastResults = allBooks;
     renderResults({ summary, books: allBooks });
   } catch (err) {
@@ -530,12 +576,11 @@ function renderResults(data) {
   books.forEach(b => { const k = b.verdict in groups ? b.verdict : 'skip'; groups[k].push(b); });
   const slc = groups.slam.length, yc = groups.yes.length, mc = groups.maybe.length, sc = groups.skip.length;
   document.getElementById('summaryBox').innerHTML = '<strong>Screening Summary</strong>' + esc(data.summary);
-  document.getElementById('countLabel').textContent = slc + ' slam dunks \u00B7 ' + yc + ' to read \u00B7 ' + mc + ' maybe \u00B7 ' + sc + ' cut';
+  document.getElementById('countLabel').textContent = slc + ' slam dunks · ' + yc + ' to read · ' + mc + ' maybe · ' + sc + ' not a fit';
   const cfg = [
     { key: 'slam', label: '\u2605 Slam dunks \u2014 auto-stock, no reading required' },
     { key: 'yes',  label: '\u25CF Read before the fair' },
-    { key: 'maybe',label: '\u25D0 Keep on your radar' },
-    { key: 'skip', label: '\u2715 Cut' }
+    { key: 'maybe',label: '\u25D0 Keep on your radar' }
   ];
   let html = '';
   cfg.forEach(function(c) {
@@ -553,13 +598,24 @@ function renderResults(data) {
     });
     html += '</div>';
   });
+  if (sc > 0) {
+    const filteredOut = window.filteredOutCount || 0;
+    const filteredMsg = filteredOut > 0 ? ' · ' + filteredOut + ' removed automatically (board books, picture books, puzzles, non-English editions, etc.)' : '';
+    html += '<div class="section-block section-skip" style="margin-top:8px"><span class="section-head">✕ ' + sc + ' title' + (sc !== 1 ? 's' : '') + ' screened but not a fit for this fair' + filteredMsg + '</span></div>';
+  } else if (window.filteredOutCount > 0) {
+    html += '<div class="section-block section-skip" style="margin-top:8px"><span class="section-head">' + window.filteredOutCount + ' titles removed automatically (board books, picture books, puzzles, non-English editions, etc.)</span></div>';
+  }
   document.getElementById('resultsList').innerHTML = html;
   document.getElementById('results').classList.add('active');
   document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+function stripCitations(s) {
+  // Remove <cite ...>...</cite> tags that leak in from web search results
+  return String(s || '').replace(/<cite[^>]*>(.*?)<\/cite>/gi, '$1').replace(/<[^>]+>/g, '');
+}
 function esc(s) {
-  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return stripCitations(String(s || '')).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 function exportCSV() {
@@ -594,6 +650,7 @@ dz.addEventListener('drop', function(e) {
 
 document.getElementById('lookupTitle').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLookup(); });
 document.getElementById('lookupAuthor').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLookup(); });
+document.getElementById('lookupPubdate').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLookup(); });
 </script>
 </body>
 </html>
