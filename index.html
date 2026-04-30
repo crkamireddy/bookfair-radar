@@ -3,122 +3,107 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Book Radar — Young Fiction</title>
+<title>Book Radar &mdash; Young Fiction</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{--ink:#1a1a18;--paper:#f5f2eb;--paper2:#edeae0;--accent:#c8401a;--muted:#7a7670;--border:#d4cfc4;--yes:#2a5c3f;--yes-bg:#eaf3ec;--maybe:#b8922a;--maybe-bg:#faf3e3;--no:#c8401a;--no-bg:#fbeeea;--slam:#1a3a6b;--slam-bg:#e8eef8}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh}
+body{font-family:"DM Sans",sans-serif;background:var(--paper);color:var(--ink);min-height:100vh}
 header{border-bottom:2px solid var(--ink);padding:24px 40px 20px;display:flex;align-items:baseline;gap:20px;background:var(--paper);position:sticky;top:0;z-index:100}
-header h1{font-family:'Playfair Display',serif;font-size:26px;font-weight:600;letter-spacing:-.5px}
-.sub{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+header h1{font-family:"Playfair Display",serif;font-size:26px;font-weight:600;letter-spacing:-.5px}
+.sub{font-family:"DM Mono",monospace;font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
 .rule{flex:1;height:1px;background:var(--border);align-self:center}
 main{max-width:860px;margin:0 auto;padding:40px 24px 80px}
 .tabs{display:flex;border-bottom:1.5px solid var(--border);margin-bottom:28px}
-.tab{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:10px 20px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1.5px;transition:color .15s;background:none;border-top:none;border-left:none;border-right:none}
+.tab{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:10px 20px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1.5px;transition:color .15s;background:none;border-top:none;border-left:none;border-right:none}
 .tab.active{color:var(--ink);border-bottom-color:var(--ink)}
 .tab-panel{display:none}.tab-panel.active{display:block}
 .intro{margin-bottom:24px;padding:16px 20px;background:var(--paper2);border-left:3px solid var(--accent);border-radius:2px}
 .intro p{font-size:13px;line-height:1.6;color:var(--muted)}.intro strong{color:var(--ink)}
-
-/* Single lookup */
-.lookup-row{display:flex;gap:10px;margin-bottom:10px}
-.lookup-row input{flex:1;padding:12px 14px;font-family:'DM Sans',sans-serif;font-size:14px;background:#fff;border:1.5px solid var(--border);border-radius:4px;color:var(--ink);outline:none;transition:border-color .2s}
+.lookup-row{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.lookup-row input{flex:1;min-width:160px;padding:12px 14px;font-family:"DM Sans",sans-serif;font-size:14px;background:#fff;border:1.5px solid var(--border);border-radius:4px;color:var(--ink);outline:none;transition:border-color .2s}
 .lookup-row input:focus{border-color:var(--ink)}
 .lookup-row input::placeholder{color:var(--muted)}
-
-/* Drop zone */
-.drop-zone{border:1.5px dashed var(--border);border-radius:6px;padding:40px 32px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;background:#fff}
-.drop-zone:hover,.drop-zone.drag-over{border-color:var(--ink);background:var(--paper2)}
+.drop-zone{border:1.5px dashed var(--border);border-radius:6px;padding:40px 32px;text-align:center;background:#fff;transition:border-color .2s,background .2s}
+.drop-zone.drag-over{border-color:var(--ink);background:var(--paper2)}
 .drop-icon{font-size:28px;margin-bottom:10px}
-.drop-title{font-family:'Playfair Display',serif;font-size:17px;margin-bottom:5px}
-.drop-sub{font-size:13px;color:var(--muted);line-height:1.6}
+.drop-title{font-family:"Playfair Display",serif;font-size:17px;margin-bottom:5px}
+.drop-sub{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px}
+.browse-label{display:inline-block;font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:10px 22px;background:var(--ink);color:var(--paper);border-radius:2px;cursor:pointer}
 .file-loaded{display:none;background:var(--yes-bg);border:1px solid #b8d9c0;border-radius:6px;padding:14px 18px;margin-top:14px;align-items:center;gap:12px}
 .file-loaded.active{display:flex}
-.fname{font-family:'DM Mono',monospace;font-size:13px;font-weight:500}
+.fname{font-family:"DM Mono",monospace;font-size:13px;font-weight:500}
 .fmeta{font-size:12px;color:var(--muted)}
 .filters{display:none;gap:10px;margin-top:18px;flex-wrap:wrap;align-items:center}
 .filters.active{display:flex}
-.filter-label{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
-.filter-chip{font-family:'DM Mono',monospace;font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:#fff;cursor:pointer;transition:all .15s;color:var(--muted)}
+.filter-label{font-family:"DM Mono",monospace;font-size:11px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.filter-chip{font-family:"DM Mono",monospace;font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:#fff;cursor:pointer;transition:all .15s;color:var(--muted)}
 .filter-chip.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-
-button.primary{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;padding:12px 28px;background:var(--ink);color:var(--paper);border:none;border-radius:2px;cursor:pointer;transition:background .15s,transform .1s;white-space:nowrap}
+button.primary{font-family:"DM Mono",monospace;font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;padding:12px 28px;background:var(--ink);color:var(--paper);border:none;border-radius:2px;cursor:pointer;transition:background .15s,transform .1s}
 button.primary:hover{background:#333330}button.primary:active{transform:scale(.98)}button.primary:disabled{background:var(--muted);cursor:not-allowed}
-button.secondary{font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:12px 20px;background:transparent;color:var(--muted);border:1.5px solid var(--border);border-radius:2px;cursor:pointer;transition:border-color .15s,color .15s}
+button.secondary{font-family:"DM Mono",monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:12px 20px;background:transparent;color:var(--muted);border:1.5px solid var(--border);border-radius:2px;cursor:pointer;transition:border-color .15s,color .15s}
 button.secondary:hover{border-color:var(--ink);color:var(--ink)}
 .controls{display:flex;gap:12px;margin-top:16px;align-items:center;flex-wrap:wrap}
 .hint{font-size:12px;color:var(--muted)}
-
 .divider{border:none;border-top:1px solid var(--border);margin:32px 0}
 .loading{display:none;text-align:center;padding:40px 0}.loading.active{display:block}
 .spinner{display:inline-block;width:22px;height:22px;border:2px solid var(--border);border-top-color:var(--ink);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:14px}
 @keyframes spin{to{transform:rotate(360deg)}}
-.loading p{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:.06em}
+.loading p{font-family:"DM Mono",monospace;font-size:12px;color:var(--muted);letter-spacing:.06em}
 .loading-sub{font-size:11px;margin-top:6px;opacity:.6}
 .progress-bar{width:100%;max-width:280px;height:3px;background:var(--border);border-radius:2px;margin:10px auto 0;overflow:hidden;display:none}
 .progress-fill{height:100%;background:var(--ink);border-radius:2px;transition:width .3s}
-.batch-info{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:6px}
-
+.batch-info{font-family:"DM Mono",monospace;font-size:11px;color:var(--muted);margin-top:6px}
 .error-box{display:none;padding:14px 18px;background:var(--no-bg);border:1px solid #f0c4b8;border-radius:4px;color:var(--no);font-size:14px;line-height:1.6;margin-top:16px}
 .error-box.active{display:block}
-
-/* Single book verdict */
 .verdict-card{display:none;margin-top:24px;background:#fff;border:1px solid var(--border);border-radius:6px;overflow:hidden}
 .verdict-card.active{display:block}
 .verdict-header{padding:20px 24px 16px;border-bottom:1px solid var(--paper2);display:flex;align-items:flex-start;gap:16px}
-.verdict-badge{font-family:'DM Mono',monospace;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:5px 12px;border-radius:2px;white-space:nowrap;flex-shrink:0}
-.verdict-yes .verdict-badge{background:var(--yes-bg);color:var(--yes)}
-.verdict-yes{border-left:3px solid var(--yes)}
-.verdict-maybe .verdict-badge{background:var(--maybe-bg);color:var(--maybe)}
-.verdict-maybe{border-left:3px solid var(--maybe)}
-.verdict-no .verdict-badge{background:var(--no-bg);color:var(--no)}
-.verdict-no{border-left:3px solid var(--no)}
-.verdict-slam .verdict-badge{background:var(--slam-bg);color:var(--slam)}
-.verdict-slam{border-left:3px solid var(--slam)}
-.verdict-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:600;line-height:1.3}
+.verdict-badge{font-family:"DM Mono",monospace;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:5px 12px;border-radius:2px;white-space:nowrap;flex-shrink:0}
+.verdict-slam{border-left:3px solid var(--slam)}.verdict-slam .verdict-badge{background:var(--slam-bg);color:var(--slam)}
+.verdict-yes{border-left:3px solid var(--yes)}.verdict-yes .verdict-badge{background:var(--yes-bg);color:var(--yes)}
+.verdict-maybe{border-left:3px solid var(--maybe)}.verdict-maybe .verdict-badge{background:var(--maybe-bg);color:var(--maybe)}
+.verdict-skip{border-left:3px solid var(--no)}.verdict-skip .verdict-badge{background:var(--no-bg);color:var(--no)}
+.verdict-title{font-family:"Playfair Display",serif;font-size:18px;font-weight:600;line-height:1.3}
 .verdict-author{font-size:13px;color:var(--muted);margin-top:3px}
+.verdict-pubdate{font-family:"DM Mono",monospace;font-size:11px;color:var(--muted);margin-top:2px}
 .verdict-body{padding:18px 24px}
 .verdict-why{font-size:14px;line-height:1.7;color:#4a4844}
 .verdict-signals{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
-.signal-tag{font-family:'DM Mono',monospace;font-size:10px;padding:3px 9px;background:var(--paper2);border-radius:2px;color:var(--muted)}
-
-/* Results list */
+.signal-tag{font-family:"DM Mono",monospace;font-size:10px;padding:3px 9px;background:var(--paper2);border-radius:2px;color:var(--muted)}
 .results{display:none}.results.active{display:block}
 .results-header{display:flex;align-items:baseline;gap:16px;margin-bottom:20px;flex-wrap:wrap}
-.results-header h2{font-family:'Playfair Display',serif;font-size:20px;font-weight:600}
-.count{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)}
+.results-header h2{font-family:"Playfair Display",serif;font-size:20px;font-weight:600}
+.count{font-family:"DM Mono",monospace;font-size:11px;color:var(--muted)}
 .summary-box{background:var(--paper2);border:1px solid var(--border);border-radius:4px;padding:18px 22px;margin-bottom:22px;font-size:14px;line-height:1.7;color:#4a4844}
-.summary-box strong{font-family:'Playfair Display',serif;font-size:15px;display:block;margin-bottom:6px;color:var(--ink)}
-
-.section-head{font-family:'DM Mono',monospace;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:2px;display:inline-block;margin-bottom:10px}
-.section-yes .section-head{background:var(--yes-bg);color:var(--yes)}
-.section-maybe .section-head{background:var(--maybe-bg);color:var(--maybe)}
-.section-no .section-head{background:var(--no-bg);color:var(--no)}
+.summary-box strong{font-family:"Playfair Display",serif;font-size:15px;display:block;margin-bottom:6px;color:var(--ink)}
+.section-block{margin-bottom:28px}
+.section-head{font-family:"DM Mono",monospace;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:2px;display:inline-block;margin-bottom:10px}
 .section-slam .section-head{background:var(--slam-bg);color:var(--slam)}
 .section-slam .book-row{border-left:3px solid var(--slam)}
-.section-block{margin-bottom:28px}
-
+.section-yes .section-head{background:var(--yes-bg);color:var(--yes)}
+.section-yes .book-row{border-left:3px solid var(--yes)}
+.section-maybe .section-head{background:var(--maybe-bg);color:var(--maybe)}
+.section-maybe .book-row{border-left:3px solid var(--maybe)}
+.section-skip .section-head{background:var(--no-bg);color:var(--no)}
 .book-row{background:#fff;border:1px solid var(--border);border-radius:4px;padding:14px 18px;margin-bottom:7px;transition:border-color .15s}
 .book-row:hover{border-color:var(--ink)}
-.section-yes .book-row{border-left:3px solid var(--yes)}
-.section-maybe .book-row{border-left:3px solid var(--maybe)}
-.section-no .book-row{border-left:3px solid var(--no)}
 .book-row-top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-.book-row-title{font-family:'Playfair Display',serif;font-size:15px;font-weight:600;line-height:1.3}
+.book-row-title{font-family:"Playfair Display",serif;font-size:15px;font-weight:600;line-height:1.3}
 .book-row-author{font-size:12px;color:var(--muted)}
+.book-row-pubdate{font-family:"DM Mono",monospace;font-size:10px;color:var(--muted);margin-left:4px}
 .book-row-why{font-size:13px;line-height:1.6;color:#4a4844;margin-top:6px}
 .tag-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
-.tag{font-family:'DM Mono',monospace;font-size:10px;padding:2px 8px;background:var(--paper2);border-radius:2px;color:var(--muted)}
+.tag{font-family:"DM Mono",monospace;font-size:10px;padding:2px 8px;background:var(--paper2);border-radius:2px;color:var(--muted)}
 </style>
 </head>
 <body>
 <header>
   <h1>Book Radar</h1>
-  <span class="sub">Young Fiction · Committee Prep</span>
+  <span class="sub">Young Fiction &middot; Committee Prep</span>
   <div class="rule"></div>
-  <span class="sub">K–3 Independent Readers</span>
+  <span class="sub">K&ndash;3 Independent Readers</span>
 </header>
 <main>
   <div class="tabs">
@@ -126,21 +111,20 @@ button.secondary:hover{border-color:var(--ink);color:var(--ink)}
     <button class="tab" onclick="switchTab('upload')">Upload catalog (.xls)</button>
   </div>
 
-  <!-- Single lookup tab -->
   <div class="tab-panel active" id="tab-lookup">
     <div class="intro">
-      <p>Enter a title and author. Claude will tell you whether it's <strong>worth the committee's time to read</strong> — ruthlessly filtered against your 2024–25 sell-through history and what actually works for K–3 independent readers.</p>
+      <p>Enter a title and author. Claude will research the book and tell you whether it is <strong>worth the committee's time to read</strong> before the fair.</p>
     </div>
     <div class="lookup-row">
-      <input type="text" id="lookupTitle" placeholder="Title" onkeydown="if(event.key==='Enter')doLookup()">
-      <input type="text" id="lookupAuthor" placeholder="Author (optional)" onkeydown="if(event.key==='Enter')doLookup()">
+      <input type="text" id="lookupTitle" placeholder="Title">
+      <input type="text" id="lookupAuthor" placeholder="Author (optional)">
     </div>
     <div class="lookup-row">
-      <input type="text" id="lookupPubdate" placeholder="Pub date (optional — e.g. May 2026)" style="max-width:260px" onkeydown="if(event.key==='Enter')doLookup()">
+      <input type="text" id="lookupPubdate" placeholder="Pub date (optional &mdash; e.g. May 2026)" style="max-width:260px">
     </div>
-    <div style="display:flex;gap:10px">
+    <div style="display:flex;gap:10px;align-items:center;margin-top:4px">
       <button class="primary" id="lookupBtn" onclick="doLookup()">Check this title</button>
-      <span class="hint" style="align-self:center">Press Enter to check</span>
+      <span class="hint">Press Enter to check</span>
     </div>
     <div class="error-box" id="lookupError"></div>
     <div class="verdict-card" id="verdictCard">
@@ -148,7 +132,7 @@ button.secondary:hover{border-color:var(--ink);color:var(--ink)}
         <div>
           <div class="verdict-title" id="verdictTitle"></div>
           <div class="verdict-author" id="verdictAuthor"></div>
-        <div class="verdict-author" id="verdictPubdate" style="margin-top:2px;font-family:'DM Mono',monospace;font-size:11px"></div>
+          <div class="verdict-pubdate" id="verdictPubdate"></div>
         </div>
         <div class="verdict-badge" id="verdictBadge"></div>
       </div>
@@ -159,19 +143,16 @@ button.secondary:hover{border-color:var(--ink);color:var(--ink)}
     </div>
   </div>
 
-  <!-- Upload tab -->
   <div class="tab-panel" id="tab-upload">
     <div class="intro">
-      <p>Upload an Edelweiss or publisher XLS or CSV. Claude will <strong>ruthlessly filter</strong> to only the titles worth your committee's reading time — picture books, board books, YA, promo items, and anything unlikely to work for K–3 independent readers are cut automatically.</p>
+      <p>Upload an Edelweiss or publisher XLS or CSV. Claude will ruthlessly filter to only the titles worth your committee's reading time.</p>
     </div>
     <div class="drop-zone" id="dropZone">
-      <div class="drop-icon">📂</div>
+      <div class="drop-icon">&#128194;</div>
       <div class="drop-title">Drop your catalog file here</div>
       <div class="drop-sub">.xls, .xlsx, or .csv from Edelweiss or publisher reps</div>
-      <label for="fileInput" style="display:inline-block;margin-top:16px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:10px 22px;background:var(--ink);color:var(--paper);border-radius:2px;cursor:pointer;">
-        Browse files
-      </label>
-      <input type="file" id="fileInput" accept=".xls,.xlsx,.csv" onchange="handleFile(this.files[0])" style="display:none">
+      <label class="browse-label" for="fileInput">Browse files</label>
+      <input type="file" id="fileInput" accept=".xls,.xlsx,.csv" style="display:none" onchange="handleFile(this.files[0])">
     </div>
     <div class="file-loaded" id="fileLoaded">
       <div><div class="fname" id="fileName"></div><div class="fmeta" id="fileMeta"></div></div>
@@ -213,257 +194,210 @@ button.secondary:hover{border-color:var(--ink);color:var(--ink)}
 </main>
 
 <script>
-const SYSTEM_PROMPT = `You are a ruthless screener for a K-3 school book fair committee focused on independent readers. Your job is NOT to recommend order quantities. Your job is to tell the committee which titles are worth reading before the fair — and to ruthlessly cut everything else.
+var WORKER_URL = "https://book-radar-worker.catreading.workers.dev";
 
-The committee reads books before deciding to stock them. Your job is to filter down a catalog to only the titles genuinely worth their reading time. Be harsh. A title should only make the "read it" list if there is a real reason to believe it could be a standout for independent readers K-3.
+var SYSTEM_PROMPT = "You are a ruthless screener for a K-3 school book fair committee focused on independent readers. Your job is NOT to recommend order quantities. Your job is to tell the committee which titles are worth reading before the fair and to ruthlessly cut everything else.\n\nThe committee reads books before deciding to stock them. Your job is to filter down a catalog to only the titles genuinely worth their reading time. Be harsh.\n\nTARGET READER: The full K-3 spectrum from early emergent readers (K-1) who need simple sentences and lots of illustrations, all the way to confident chapter book readers (2-3). This includes early readers and beginning chapter books, graphic novels and illustrated chapter books, series chapter books with short chapters, and accessible middle-grade for advanced 2-3 readers. The committee stocks books for kids who struggle AND kids who devour books. Younger end for independent readers or guided reader format is NOT a reason to skip. Only skip if the format is a picture book (handled by a separate committee), board book, or clearly YA/middle school+.\n\nBENCHMARK DATA:\n\n2024 PROVEN SELLERS (auto-stock, no reading needed):\nBig Nate, Wimpy Kid, Dog Man, BSC Graphic Novels, BSC Little Sister Graphic Novels, Pizza and Taco GN, Investigators GN, Earl and Worm, Press Start Branches, Diary of a Pug Branches, Orris and Timble DiCamillo, Wings of Fire GNs, Hilo GNs, Dragon Girls, Narwhal and Jelly, First Cat in Space Barnett, Bad Guys late series caution\n\nSLAM DUNKS (verdict slam):\nAny new installment of Big Nate, Wimpy Kid, Dog Man, BSC Graphic Novels, BSC Little Sister Graphic Novels, Pizza and Taco, Investigators, Earl and Worm. Mark as slam so committee knows to order without reading.\n\nREAD IT (verdict yes):\n- New series number 1 with genuine breakout potential\n- New entry in proven series not yet confirmed\n- Trusted author in new format: DiCamillo, Barnett, Pilkey, Kinney, Kelly, Applegate, Hunter\n- Promising graphic novel from unproven but interesting team\n- Strong concept that fills a gap in the lineup\n\nMAYBE (verdict maybe):\n- Interesting but uncertain\n- Sequel in series with mixed history\n\nSKIP (verdict skip):\n- Already a proven auto-stock\n- Late entry in clearly declining series\n- Pure picture book or board book (separate committee)\n- YA teen content (middle school+)\n- Activity book, coloring book\n- Celebrity author with no fiction track record\n- Generic series filler with nothing distinctive\n\nRULES:\n- 2026 publications only: if pub date is 2025 or earlier verdict must be skip citing the pub date\n- If user supplies a pub date treat it as authoritative and override web search\n- English language only: non-English editions always skip\n- Picture books go to a different committee: always skip\n\nFor SINGLE title lookups you have web search available. Use it to look up the book description, target age range, genre, series info, and any early buzz. A brand new book from an unproven author might still be a great pick if it has a compelling concept. Factor this research into your verdict.\n\nOUTPUT FORMAT respond ONLY with valid JSON no markdown:\nFor single title: {\"verdict\":\"slam\"|\"yes\"|\"maybe\"|\"skip\",\"title\":\"string\",\"author\":\"string\",\"pubdate\":\"if known\",\"reason\":\"2-3 direct sentences referencing what you found\",\"signals\":[\"signal1\",\"signal2\"]}\nFor batch: {\"summary\":\"2-3 sentences on catalog\",\"books\":[{\"title\":\"string\",\"author\":\"string\",\"pubdate\":\"if available\",\"verdict\":\"slam\"|\"yes\"|\"maybe\"|\"skip\",\"reason\":\"1-2 direct sentences\",\"signals\":[\"signal1\"]}]}";
 
-TARGET READER: The full K-3 spectrum — from early emergent readers (K-1) who need simple sentences and lots of illustrations, all the way to confident chapter book readers (2-3). This includes:
-- Early readers and beginning chapter books (e.g. I Can Read Level 3, Step into Reading Level 3-4, Hello Reader)
-- Graphic novels and illustrated chapter books (high visual appeal, accessible for struggling readers)
-- Series chapter books with short chapters and illustrations (great for reluctant readers)
-- Accessible middle-grade for advanced 2-3 readers
-The committee deliberately stocks books for kids who struggle AND kids who devour books. "Younger end for independent readers" or "guided reader format" is NOT a reason to skip — it may be exactly what a struggling K-1 reader needs. Only skip if the format is clearly YA/middle school+, or a board book. Picture books are handled by a separate committee — skip those regardless of reading level.
-
-YOUR BENCHMARK DATA:
-
-=== 2024 PROVEN SELLERS ===
-Big Nate series, Wimpy Kid series, Dog Man series, BSC Graphic Novel series, BSC Little Sister Graphic Novel series, Pizza and Taco GN series, Investigators GN series, Earl and Worm series, Press Start Branches, Diary of a Pug Branches, Orris and Timble DiCamillo, Wings of Fire Graphic Novels, Hilo Graphic Novels, Dragon Girls, Narwhal and Jelly, First Cat in Space Barnett, Bad Guys, Owl Diaries, Dragon Masters
-
-=== SLAM DUNKS (verdict: slam) ===
-Any new installment of: Big Nate, Wimpy Kid, Dog Man, BSC Graphic Novels, BSC Little Sister Graphic Novels, Pizza and Taco, Investigators, Earl and Worm. Mark as slam so committee knows to order without reading.
-
-=== READ IT criteria (verdict: yes) ===
-- New series number 1 with genuine breakout potential for K-3 independent readers
-- New entry in proven series not yet confirmed for next fair
-- Trusted author in new format or new series: DiCamillo, Barnett, Pilkey, Kinney, Kelly, Applegate, Hunter
-- Promising graphic novel from unproven creative team
-- Strong concept that fills a gap
-
-=== MAYBE criteria (verdict: maybe) ===
-- Interesting but uncertain
-- Sequel in series with mixed history
-
-=== SKIP criteria (verdict: skip) ===
-- Already a proven auto-stock (slam dunks)
-- Late entry in a clearly declining series
-- Pure picture book or board book (no words/minimal text, pre-reader)
-- YA/teen content (middle school+)
-- Activity book, coloring book
-- Celebrity author with no fiction track record
-- Generic series filler with nothing distinctive
-- Do NOT skip just because a book targets younger or struggling readers — that is a feature, not a flaw
-
-Trusted authors: Erin Hunter Warriors/Survivors/Renegades, Katherine Applegate, Erin Entrada Kelly, Dan Gutman, Chris Grabenstein
-YA/teen romance/horror: always skip
-English-language only: non-English editions always skip
-- 2026 publications only: if the pub date is 2025 or earlier, verdict must be skip with reason citing the pub date — we only consider new 2026 titles for the fair
-- If the user supplies a pub date, treat it as authoritative and override anything found via web search
-
-For SINGLE title lookups: you have web search available. Use it to look up the book's description, target age range, genre, series info, and any early buzz. A brand new book from an unproven author might still be a great pick if it has a compelling concept, strong reviews, or the right fit for K-3 independent readers. Factor this research into your verdict — don't just rely on author track record alone.
-
-OUTPUT FORMAT - respond ONLY with valid JSON no markdown:
-For single title: {"verdict":"slam"|"yes"|"maybe"|"skip","title":"string","author":"string","pubdate":"if known","reason":"2-3 direct sentences. For single lookups, reference what you found about the book — its concept, age range, format, early reception. Be specific.","signals":["signal1","signal2"]}
-For batch: {"summary":"2-3 sentences on catalog","books":[{"title":"string","author":"string","pubdate":"if available","verdict":"slam"|"yes"|"maybe"|"skip","reason":"1-2 direct sentences","signals":["signal1"]}]}`;
-
-let loadedTitles = [];
-let lastResults = [];
-let activeFormat = 'all';
+var loadedTitles = [];
+var lastResults = [];
+var activeFormat = "all";
+var filteredOutCount = 0;
 
 function switchTab(t) {
-  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-  document.querySelectorAll('.tab-panel').forEach(x => x.classList.remove('active'));
-  document.querySelector('[onclick="switchTab(\'' + t + '\')"]').classList.add('active');
-  document.getElementById('tab-' + t).classList.add('active');
+  document.querySelectorAll(".tab").forEach(function(x) { x.classList.remove("active"); });
+  document.querySelectorAll(".tab-panel").forEach(function(x) { x.classList.remove("active"); });
+  document.querySelectorAll(".tab").forEach(function(tab) { if (tab.getAttribute("onclick") === "switchTab('" + t + "')") tab.classList.add("active"); });
+  document.getElementById("tab-" + t).classList.add("active");
+}
+
+function esc(s) {
+  var cleaned = String(s || "").replace(/<cite[^>]*>(.*?)<\/cite>/gi, "$1").replace(/<[^>]+>/g, "");
+  return cleaned.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+function showLoading(msg, sub) {
+  document.getElementById("loading").classList.add("active");
+  document.getElementById("loadingMsg").textContent = msg || "Screening...";
+  document.getElementById("loadingSub").textContent = sub || "";
+}
+
+function hideLoading() {
+  document.getElementById("loading").classList.remove("active");
+  document.getElementById("progressBar").style.display = "none";
+  document.getElementById("batchInfo").textContent = "";
+}
+
+async function callAPI(body) {
+  var res = await fetch(WORKER_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  var data = await res.json();
+  if (data.error) throw new Error("API error: " + JSON.stringify(data.error));
+  return data;
+}
+
+function parseResponse(data) {
+  var text = (data.content || []).filter(function(b) { return b.type === "text"; }).map(function(b) { return b.text || ""; }).join("");
+  if (!text.trim()) throw new Error("empty");
+  var clean = text.replace(/`{3}json|`{3}/g, "").trim();
+  return JSON.parse(clean);
 }
 
 async function doLookup() {
-  const title = document.getElementById('lookupTitle').value.trim();
-  const author = document.getElementById('lookupAuthor').value.trim();
+  var title = document.getElementById("lookupTitle").value.trim();
   if (!title) return;
-  const btn = document.getElementById('lookupBtn');
-  btn.disabled = true;
-  btn.textContent = 'Checking...';
-  document.getElementById('lookupError').classList.remove('active');
-  document.getElementById('verdictCard').classList.remove('active');
-  document.getElementById('loading').classList.add('active');
-  document.getElementById('loadingMsg').textContent = 'Researching "' + title + '"...';
-  document.getElementById('loadingSub').textContent = 'Looking up book details before screening';
-  document.getElementById('loadingSub').textContent = '';
+  var author = document.getElementById("lookupAuthor").value.trim();
+  var pubdate = document.getElementById("lookupPubdate").value.trim();
+  var btn = document.getElementById("lookupBtn");
+  btn.disabled = true; btn.textContent = "Checking...";
+  document.getElementById("lookupError").classList.remove("active");
+  document.getElementById("verdictCard").classList.remove("active");
+  showLoading("Researching " + title + "...", "Looking up book details before screening");
   try {
-    const pubdate = document.getElementById('lookupPubdate').value.trim();
-    const prompt = 'Single title lookup:\nTitle: ' + title + (author ? '\nAuthor: ' + author : '') + (pubdate ? '\nPub date (user-supplied, treat as authoritative): ' + pubdate : '');
-    const res = await fetch('https://book-radar-worker.catreading.workers.dev', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 2000,
-        system: SYSTEM_PROMPT,
-        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-        messages: [{ role: 'user', content: prompt }]
-      })
+    var prompt = "Single title lookup:\nTitle: " + title;
+    if (author) prompt += "\nAuthor: " + author;
+    if (pubdate) prompt += "\nPub date (user-supplied, treat as authoritative): " + pubdate;
+    var data = await callAPI({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 2000,
+      system: SYSTEM_PROMPT,
+      tools: [{ type: "web_search_20250305", name: "web_search" }],
+      messages: [{ role: "user", content: prompt }]
     });
-    const data = await res.json();
-    // Extract only text blocks (skip tool_use and tool_result blocks)
-    const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text || '').join('');
-    if (data.error) throw new Error('API error: ' + JSON.stringify(data.error));
-    const clean = text.replace(/`{3}json|`{3}/g, '').trim();
-    if (!clean) throw new Error('JSON parse failed: empty response');
-    let parsed;
-    try {
-      parsed = JSON.parse(clean);
-    } catch(je) {
-      // Claude returned plain text instead of JSON — probably couldn't find the book
-      const notFound = clean.toLowerCase().includes('not find') || clean.toLowerCase().includes('no results') || clean.toLowerCase().includes('couldn't find');
-      throw new Error(notFound
-        ? 'JSON parse failed: not found'
-        : 'JSON parse failed: ' + je.message);
-    }
+    var parsed = parseResponse(data);
     renderVerdict(parsed);
-  } catch (err) {
-    let msg = 'Something went wrong. Try again.';
-    if (err.message && err.message.includes('not found')) {
-      msg = 'Couldn't find this title online. Double-check the spelling or try adding the author name.';
-    } else if (err.message && err.message.includes('JSON parse failed')) {
-      msg = 'Got an unexpected response for this title. Try being more specific — add the author or series name.';
-    } else if (err.message && err.message.includes('API error')) {
-      msg = 'API error — check your connection and try again.';
+  } catch(err) {
+    var msg = "Something went wrong. Try again.";
+    if (err.message === "empty" || err.message.indexOf("JSON") !== -1) {
+      msg = "Could not find this title online. Check the spelling or add the author name.";
+    } else if (err.message.indexOf("API") !== -1) {
+      msg = "API error. Check your connection and try again.";
     }
-    document.getElementById('lookupError').textContent = msg;
-    document.getElementById('lookupError').classList.add('active');
+    document.getElementById("lookupError").textContent = msg;
+    document.getElementById("lookupError").classList.add("active");
   } finally {
-    document.getElementById('loading').classList.remove('active');
-    btn.disabled = false;
-    btn.textContent = 'Check this title';
+    hideLoading();
+    btn.disabled = false; btn.textContent = "Check this title";
   }
 }
 
 function renderVerdict(v) {
-  const card = document.getElementById('verdictCard');
-  card.className = 'verdict-card active verdict-' + v.verdict;
-  document.getElementById('verdictTitle').textContent = v.title || document.getElementById('lookupTitle').value;
-  document.getElementById('verdictAuthor').textContent = v.author || document.getElementById('lookupAuthor').value || '';
-  const pd = document.getElementById('verdictPubdate');
-  pd.textContent = v.pubdate ? 'pub ' + v.pubdate : '';
-  const badge = document.getElementById('verdictBadge');
-  if (v.verdict === 'slam') badge.textContent = '\u2605 Slam dunk';
-  else if (v.verdict === 'yes') badge.textContent = '\u25CF Read it';
-  else if (v.verdict === 'maybe') badge.textContent = '\u25D0 Maybe';
-  else badge.textContent = '\u2715 Skip';
-  document.getElementById('verdictWhy').textContent = v.reason || '';
-  const sig = document.getElementById('verdictSignals');
-  sig.innerHTML = (v.signals || []).map(s => '<span class="signal-tag">' + esc(s) + '</span>').join('');
-  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  var card = document.getElementById("verdictCard");
+  card.className = "verdict-card active verdict-" + v.verdict;
+  document.getElementById("verdictTitle").textContent = v.title || document.getElementById("lookupTitle").value;
+  document.getElementById("verdictAuthor").textContent = v.author || document.getElementById("lookupAuthor").value || "";
+  document.getElementById("verdictPubdate").textContent = v.pubdate ? "pub " + v.pubdate : "";
+  var badge = document.getElementById("verdictBadge");
+  var labels = { slam: "Slam dunk", yes: "Read it", maybe: "Maybe", skip: "Skip" };
+  badge.textContent = labels[v.verdict] || v.verdict;
+  document.getElementById("verdictWhy").textContent = esc(v.reason || "");
+  var sig = document.getElementById("verdictSignals");
+  sig.innerHTML = (v.signals || []).map(function(s) { return "<span class=\"signal-tag\">" + esc(s) + "</span>"; }).join("");
+  card.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 function handleFile(file) {
   if (!file) return;
-  const isCSV = file.name.toLowerCase().endsWith('.csv');
-  const reader = new FileReader();
+  var isCSV = file.name.toLowerCase().endsWith(".csv");
+  var reader = new FileReader();
   reader.onload = function(e) {
     try {
-      let rows = [];
-      let ti = -1;
+      var rows = [];
+      var ti = -1;
       if (isCSV) {
-        const lines = e.target.result.split(/\r?\n/).filter(l => l.trim());
-        function parseCSVLine(line) {
-          const result = [];
-          let cur = '';
-          let inQ = false;
-          for (let i = 0; i < line.length; i++) {
-            const ch = line[i];
-            if (ch === '"') {
-              if (inQ && line[i+1] === '"') { cur += '"'; i++; }
-              else inQ = !inQ;
-            } else if (ch === ',' && !inQ) {
-              result.push(cur.trim()); cur = '';
-            } else {
-              cur += ch;
-            }
+        var lines = e.target.result.split(/\r?\n/).filter(function(l) { return l.trim(); });
+        rows = lines.map(function(line) {
+          var result = []; var cur = ""; var inQ = false;
+          for (var i = 0; i < line.length; i++) {
+            var ch = line[i];
+            if (ch === "\"") { if (inQ && line[i+1] === "\"") { cur += "\""; i++; } else inQ = !inQ; }
+            else if (ch === "," && !inQ) { result.push(cur.trim()); cur = ""; }
+            else cur += ch;
           }
           result.push(cur.trim());
           return result;
-        }
-        rows = lines.map(parseCSVLine);
-        const headers = rows[0].map(h => String(h || '').toLowerCase());
-        ti = headers.findIndex(h => h.includes('title'));
+        });
+        var headers0 = rows[0].map(function(h) { return String(h||"").toLowerCase(); });
+        ti = headers0.findIndex(function(h) { return h.includes("title"); });
       } else {
-        const wb = XLSX.read(e.target.result, { type: 'binary' });
-        for (const name of wb.SheetNames) {
-          const candidate = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1 });
+        var wb = XLSX.read(e.target.result, { type: "binary" });
+        for (var ni = 0; ni < wb.SheetNames.length; ni++) {
+          var name = wb.SheetNames[ni];
+          var candidate = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1 });
           if (!candidate.length) continue;
-          const hi = candidate[0].map(h => String(h || '').toLowerCase()).findIndex(h => h.includes('title'));
+          var hi = candidate[0].map(function(h) { return String(h||"").toLowerCase(); }).findIndex(function(h) { return h.includes("title"); });
           if (hi !== -1) { rows = candidate; ti = hi; break; }
         }
       }
-      if (!rows.length) throw new Error('Empty file');
-      if (ti === -1) throw new Error('Could not find Title column');
+      if (!rows.length) throw new Error("Empty file");
+      if (ti === -1) throw new Error("Could not find Title column");
 
-      const headers = rows[0].map(h => String(h || '').toLowerCase());
-      const ai = headers.findIndex(h => h.includes('author'));
-      const fi = headers.findIndex(h => h.includes('format'));
-      const pi = headers.findIndex(h => h.includes('price'));
-      const di = headers.findIndex(h => h.includes('pub'));
-      const ci = headers.findIndex(h => h.includes('catalog'));
+      var headers = rows[0].map(function(h) { return String(h||"").toLowerCase(); });
+      var ai = headers.findIndex(function(h) { return h.includes("author"); });
+      var fi = headers.findIndex(function(h) { return h.includes("format"); });
+      var pi = headers.findIndex(function(h) { return h.includes("price"); });
+      var di = headers.findIndex(function(h) { return h.includes("pub"); });
+      var ci = headers.findIndex(function(h) { return h.includes("catalog"); });
 
-      const SKIP_FMT = new Set(['Board Book','Coloring Book','Promotional Poster',
-        'Multiple-component retail product','Novelty Book','Hardcover Picture Book',
-        'Trade Paperback Picture Book','Paperback Picture Book','Jigsaw Puzzle','Cards',
-        'Diary','Game','Lift-the-Flap Book','Noisy Book','Postcard Book or Pack',
-        'Other Merchandise','Sticker Book','Kit','Counterpack \u2013 Filled',
-        'Counterpack \u2013 Empty','Hardcover Paper over boards','']);
+      var SKIP_FMT = ["Board Book","Coloring Book","Promotional Poster","Multiple-component retail product","Novelty Book","Hardcover Picture Book","Trade Paperback Picture Book","Paperback Picture Book","Jigsaw Puzzle","Cards","Diary","Game","Lift-the-Flap Book","Noisy Book","Postcard Book or Pack","Other Merchandise","Sticker Book","Kit","Counterpack – Filled","Counterpack – Empty","Hardcover Paper over boards",""];
+      var SKIP_KW = ["Signed Carton","Ppk","Merch Kit","Storytime Kit","Standee","Spinner","Leaves"," Mix ","c Ctr","Wire","Printed Kit","Picture Book","Sticker & Activity","Sticker and Activity","Activity Book","Lift-the-flap","lift-the-flap","Floor Display","Counter Display","Carton Pack","Copy Solid","Boxed Set","Box Set","Books in 1","Books-in-1"," Collection (","Library Edition","Collector’s Edition","Collector's Edition","Plush Journal","Sketchbook","Notebook","Play Set","Magnetic Play","Puppet Book","Advent Calendar","Sound Book","Coloring","Fisher-Price","CoComelon","Hello Kitty and Friends","Hot Wheels"];
+      var SKIP_LANG = ["bilingual","bilingüe","español","spanish edition","edición","en español","(The ","(A ","(An "];
+      var SKIP_CATALOGS = ["Canada","canada","Adult","SimonTeen","Teen","Review Copies","ALA 2026","Anniversary","AAPI","Missing","Dynamic"];
 
-      const SKIP_KW = ['Signed Carton','Ppk','Merch Kit','Storytime Kit','Standee','Spinner',
-        'Leaves',' Mix ','c Ctr','Wire','Printed Kit','Picture Book','Sticker & Activity',
-        'Sticker and Activity','Activity Book','Lift-the-flap','lift-the-flap','Floor Display',
-        'Counter Display','Carton Pack','Copy Solid','Boxed Set','Box Set','Books in 1',
-        'Books-in-1',' Collection (','Library Edition',"Collector's Edition",
-        '\u2019s Edition','Plush Journal','Sketchbook','Notebook','Play Set','Magnetic Play',
-        'Puppet Book','Advent Calendar','Sound Book','Coloring','Fisher-Price','CoComelon',
-        'Night Before Christmas with Letter','Hello Kitty and Friends','Hot Wheels'];
-
-      const SKIP_LANG = ['bilingual','bilingüe','español','spanish edition','edición','en español','(The ','(A ','(An '];
-
-      const SKIP_CATALOGS = ['Canada','canada','Adult','SimonTeen','Teen','Review Copies',
-        'ALA 2026','Anniversary','AAPI','Missing','Dynamic'];
-
-      function hasSpanishChars(s) { return /[áéíóúüñ¡¿]/i.test(s); }
-
-      loadedTitles = [];
-      let filteredOutCount = 0;
-      for (let r = 1; r < rows.length; r++) {
-        const row = rows[r];
-        const title = String(row[ti] || '').trim();
-        const fmt = fi >= 0 ? String(row[fi] || '').trim() : '';
-        const price = pi >= 0 ? parseFloat(row[pi]) || 0 : 99;
-        const author = ai >= 0 ? String(row[ai] || '').trim() : '';
-        const pubdate = di >= 0 ? String(row[di] || '').trim() : '';
-        const catalog = ci >= 0 ? String(row[ci] || '').trim() : '';
-
-        if (!title) continue;
-        // Skip anything not published in 2026
-        const pubYear = pubdate ? parseInt(pubdate.split('/').pop()) : 0;
-        if (pubYear && pubYear < 2026) { filteredOutCount++; continue; }
-        if (SKIP_FMT.has(fmt)) { filteredOutCount++; continue; }
-        if (price === 0) { filteredOutCount++; continue; }
-        if (SKIP_KW.some(k => title.includes(k))) { filteredOutCount++; continue; }
-        if (SKIP_CATALOGS.some(k => catalog.includes(k))) { filteredOutCount++; continue; }
-        if (SKIP_LANG.some(k => title.toLowerCase().includes(k.toLowerCase()))) { filteredOutCount++; continue; }
-        if (hasSpanishChars(title)) { filteredOutCount++; continue; }
-
-        loadedTitles.push({ title, author, format: fmt, price, pubdate });
+      function hasSpanishChars(s) {
+        return /[áéíóúüñ¡¿]/i.test(s);
       }
 
-      window.filteredOutCount = filteredOutCount;
-      document.getElementById('fileLoaded').classList.add('active');
-      document.getElementById('fileName').textContent = file.name;
-      document.getElementById('fileMeta').textContent = loadedTitles.length + ' titles to screen (' + filteredOutCount + ' non-applicable titles removed)';
-      document.getElementById('filters').classList.add('active');
-      document.getElementById('analyzeFileBtn').disabled = false;
-      document.getElementById('fileHint').textContent = loadedTitles.length + ' titles ready';
-    } catch (err) {
-      document.getElementById('uploadError').textContent = 'Could not read file: ' + err.message;
-      document.getElementById('uploadError').classList.add('active');
+      loadedTitles = [];
+      filteredOutCount = 0;
+      for (var r = 1; r < rows.length; r++) {
+        var row = rows[r];
+        var title = String(row[ti]||"").trim();
+        var fmt = fi >= 0 ? String(row[fi]||"").trim() : "";
+        var price = pi >= 0 ? parseFloat(row[pi])||0 : 99;
+        var author = ai >= 0 ? String(row[ai]||"").trim() : "";
+        var pubdate = di >= 0 ? String(row[di]||"").trim() : "";
+        var catalog = ci >= 0 ? String(row[ci]||"").trim() : "";
+
+        if (!title) continue;
+
+        var pubYear = 0;
+        if (pubdate) {
+          var parts = pubdate.split(/[\/\-\s]/);
+          for (var pi2 = 0; pi2 < parts.length; pi2++) {
+            var n = parseInt(parts[pi2]);
+            if (n > 2000 && n < 2100) { pubYear = n; break; }
+          }
+        }
+        if (pubYear && pubYear < 2026) { filteredOutCount++; continue; }
+        if (SKIP_FMT.indexOf(fmt) !== -1) { filteredOutCount++; continue; }
+        if (price === 0) { filteredOutCount++; continue; }
+        var skipKW = false;
+        for (var ki = 0; ki < SKIP_KW.length; ki++) { if (title.includes(SKIP_KW[ki])) { skipKW = true; break; } }
+        if (skipKW) { filteredOutCount++; continue; }
+        var skipCat = false;
+        for (var sci = 0; sci < SKIP_CATALOGS.length; sci++) { if (catalog.includes(SKIP_CATALOGS[sci])) { skipCat = true; break; } }
+        if (skipCat) { filteredOutCount++; continue; }
+        var skipLang = false;
+        var titleLower = title.toLowerCase();
+        for (var li = 0; li < SKIP_LANG.length; li++) { if (titleLower.includes(SKIP_LANG[li].toLowerCase())) { skipLang = true; break; } }
+        if (skipLang) { filteredOutCount++; continue; }
+        if (hasSpanishChars(title)) { filteredOutCount++; continue; }
+
+        loadedTitles.push({ title: title, author: author, format: fmt, price: price, pubdate: pubdate });
+      }
+
+      document.getElementById("fileLoaded").classList.add("active");
+      document.getElementById("fileName").textContent = file.name;
+      document.getElementById("fileMeta").textContent = loadedTitles.length + " titles to screen (" + filteredOutCount + " non-applicable removed)";
+      document.getElementById("filters").classList.add("active");
+      document.getElementById("analyzeFileBtn").disabled = false;
+      document.getElementById("fileHint").textContent = loadedTitles.length + " titles ready";
+    } catch(err) {
+      document.getElementById("uploadError").textContent = "Could not read file: " + err.message;
+      document.getElementById("uploadError").classList.add("active");
     }
   };
   if (isCSV) { reader.readAsText(file); } else { reader.readAsBinaryString(file); }
@@ -471,182 +405,155 @@ function handleFile(file) {
 
 function clearFile() {
   loadedTitles = [];
-  document.getElementById('fileLoaded').classList.remove('active');
-  document.getElementById('filters').classList.remove('active');
-  document.getElementById('analyzeFileBtn').disabled = true;
-  document.getElementById('fileHint').textContent = 'Upload a file to begin';
-  document.getElementById('fileInput').value = '';
+  filteredOutCount = 0;
+  document.getElementById("fileLoaded").classList.remove("active");
+  document.getElementById("filters").classList.remove("active");
+  document.getElementById("analyzeFileBtn").disabled = true;
+  document.getElementById("fileHint").textContent = "Upload a file to begin";
+  document.getElementById("fileInput").value = "";
 }
 
 function toggleFilter(btn) {
-  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-  btn.classList.add('active');
+  document.querySelectorAll(".filter-chip").forEach(function(c) { c.classList.remove("active"); });
+  btn.classList.add("active");
   activeFormat = btn.dataset.fmt;
 }
 
 function getFiltered() {
-  if (activeFormat === 'all') return loadedTitles;
-  if (activeFormat === 'graphic') return loadedTitles.filter(t =>
-    t.format.toLowerCase().includes('graphic') || t.title.toLowerCase().includes('graphic novel'));
-  return loadedTitles.filter(t => t.format === activeFormat);
+  if (activeFormat === "all") return loadedTitles;
+  if (activeFormat === "graphic") return loadedTitles.filter(function(t) { return t.format.toLowerCase().includes("graphic") || t.title.toLowerCase().includes("graphic novel"); });
+  return loadedTitles.filter(function(t) { return t.format === activeFormat; });
 }
 
 async function analyzeFile() {
-  const titles = getFiltered();
+  var titles = getFiltered();
   if (!titles.length) return;
-  const btn = document.getElementById('analyzeFileBtn');
-  btn.disabled = true;
-  btn.textContent = 'Screening...';
-  document.getElementById('loading').classList.add('active');
-  document.getElementById('results').classList.remove('active');
-  document.getElementById('uploadError').classList.remove('active');
-  const BATCH = 30;
-  const batches = [];
-  for (let i = 0; i < titles.length; i += BATCH) batches.push(titles.slice(i, i + BATCH));
-  document.getElementById('progressBar').style.display = 'block';
-  document.getElementById('loadingMsg').textContent = 'Screening ' + titles.length + ' titles...';
+  var btn = document.getElementById("analyzeFileBtn");
+  btn.disabled = true; btn.textContent = "Screening...";
+  document.getElementById("results").classList.remove("active");
+  document.getElementById("uploadError").classList.remove("active");
+  var BATCH = 30;
+  var batches = [];
+  for (var i = 0; i < titles.length; i += BATCH) batches.push(titles.slice(i, i + BATCH));
+  document.getElementById("progressBar").style.display = "block";
+  showLoading("Screening " + titles.length + " titles...", "");
   try {
-    let allBooks = [];
-    for (let b = 0; b < batches.length; b++) {
-      const batch = batches[b];
-      document.getElementById('loadingSub').textContent = 'Batch ' + (b + 1) + ' of ' + batches.length;
-      document.getElementById('batchInfo').textContent = batch.slice(0, 3).map(t => t.title).join(', ') + (batch.length > 3 ? '...' : '');
-      document.getElementById('progressFill').style.width = Math.round(b / batches.length * 100) + '%';
-      const list = batch.map(t =>
-        t.title + (t.author ? ' — ' + t.author : '') +
-        (t.format ? ' [' + t.format + ']' : '') +
-        (t.pubdate ? ' pub:' + t.pubdate : '')
-      ).join('\n');
-      const res = await fetch('https://book-radar-worker.catreading.workers.dev', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 4000,
-          system: SYSTEM_PROMPT,
-          messages: [{ role: 'user', content: 'Screen these titles for a K-3 book fair committee. Which ones are worth reading?\n\n' + list }]
-        })
+    var allBooks = [];
+    for (var b = 0; b < batches.length; b++) {
+      var batch = batches[b];
+      document.getElementById("loadingSub").textContent = "Batch " + (b+1) + " of " + batches.length;
+      document.getElementById("batchInfo").textContent = batch.slice(0,3).map(function(t) { return t.title; }).join(", ") + (batch.length > 3 ? "..." : "");
+      document.getElementById("progressFill").style.width = Math.round(b / batches.length * 100) + "%";
+      var list = batch.map(function(t) {
+        return t.title + (t.author ? " — " + t.author : "") + (t.format ? " [" + t.format + "]" : "") + (t.pubdate ? " pub:" + t.pubdate : "");
+      }).join("\n");
+      var data = await callAPI({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 4000,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: "user", content: "Screen these titles for a K-3 book fair committee. Which ones are worth reading?\n\n" + list }]
       });
-      const data = await res.json();
-      const text = (data.content || []).map(b => b.text || '').join('');
-      console.log('Batch ' + (b+1) + ' raw response:', text.slice(0, 200));
-      if (data.error) throw new Error('API error: ' + JSON.stringify(data.error));
-      const clean = text.replace(/`{3}json|`{3}/g, '').trim();
-      let parsed;
-      try { parsed = JSON.parse(clean); } catch(je) { console.error('JSON parse failed:', clean.slice(0,300)); throw new Error('JSON parse failed on batch ' + (b+1) + ': ' + je.message); }
+      var parsed = parseResponse(data);
       allBooks = allBooks.concat(parsed.books || []);
     }
-    document.getElementById('progressFill').style.width = '100%';
-    // Deduplicate — keep first occurrence of each title (earlier batches win)
-    const seen = new Set();
-    allBooks = allBooks.filter(b => {
-      const key = b.title.toLowerCase().trim();
+    document.getElementById("progressFill").style.width = "100%";
+    // Deduplicate
+    var seen = new Set();
+    allBooks = allBooks.filter(function(b) {
+      var key = b.title.toLowerCase().trim();
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
     });
-    const slc = allBooks.filter(b => b.verdict === 'slam').length;
-    const yc = allBooks.filter(b => b.verdict === 'yes').length;
-    const mc = allBooks.filter(b => b.verdict === 'maybe').length;
-    const skipCount = allBooks.filter(b => b.verdict === 'skip').length;
-    const filteredOut = window.filteredOutCount || 0;
-    const summary = 'From ' + allBooks.length + ' titles screened: ' + slc + ' slam dunks, ' + yc + ' to read, ' + mc + ' to watch, ' + skipCount + ' not a fit for this fair. ' + (filteredOut > 0 ? filteredOut + ' titles were automatically removed (board books, puzzles, picture books, non-English editions, etc.) and are not shown.' : '');
+    var slc = allBooks.filter(function(b) { return b.verdict === "slam"; }).length;
+    var yc  = allBooks.filter(function(b) { return b.verdict === "yes";  }).length;
+    var mc  = allBooks.filter(function(b) { return b.verdict === "maybe";}).length;
+    var sc  = allBooks.filter(function(b) { return b.verdict === "skip"; }).length;
+    var summary = "From " + allBooks.length + " titles screened: " + slc + " slam dunks, " + yc + " to read, " + mc + " to watch. " + (sc > 0 ? sc + " did not fit fair criteria." : "") + (filteredOutCount > 0 ? " " + filteredOutCount + " titles removed automatically before screening (board books, picture books, puzzles, non-English editions, etc.)" : "");
     lastResults = allBooks;
-    renderResults({ summary, books: allBooks });
-  } catch (err) {
-    document.getElementById('uploadError').textContent = 'Screening failed: ' + err.message + ' — open browser console (Cmd+Option+J) for details.';
-    document.getElementById('uploadError').classList.add('active');
-    console.error('Screening error:', err);
+    renderResults({ summary: summary, books: allBooks });
+  } catch(err) {
+    document.getElementById("uploadError").textContent = "Screening failed: " + err.message;
+    document.getElementById("uploadError").classList.add("active");
   } finally {
-    document.getElementById('loading').classList.remove('active');
-    btn.disabled = false;
-    btn.textContent = 'Screen catalog';
-    document.getElementById('progressBar').style.display = 'none';
-    document.getElementById('batchInfo').textContent = '';
+    hideLoading();
+    btn.disabled = false; btn.textContent = "Screen catalog";
   }
 }
 
 function renderResults(data) {
-  const books = data.books || [];
-  const groups = { slam: [], yes: [], maybe: [], skip: [] };
-  books.forEach(b => { const k = b.verdict in groups ? b.verdict : 'skip'; groups[k].push(b); });
-  const slc = groups.slam.length, yc = groups.yes.length, mc = groups.maybe.length, sc = groups.skip.length;
-  document.getElementById('summaryBox').innerHTML = '<strong>Screening Summary</strong>' + esc(data.summary);
-  document.getElementById('countLabel').textContent = slc + ' slam dunks · ' + yc + ' to read · ' + mc + ' maybe · ' + sc + ' not a fit';
-  const cfg = [
-    { key: 'slam', label: '\u2605 Slam dunks \u2014 auto-stock, no reading required' },
-    { key: 'yes',  label: '\u25CF Read before the fair' },
-    { key: 'maybe',label: '\u25D0 Keep on your radar' }
+  var books = data.books || [];
+  var groups = { slam: [], yes: [], maybe: [], skip: [] };
+  books.forEach(function(b) { var k = groups[b.verdict] ? b.verdict : "skip"; groups[k].push(b); });
+  var slc = groups.slam.length, yc = groups.yes.length, mc = groups.maybe.length, sc = groups.skip.length;
+  document.getElementById("summaryBox").innerHTML = "<strong>Screening Summary</strong>" + esc(data.summary);
+  document.getElementById("countLabel").textContent = slc + " slam dunks · " + yc + " to read · " + mc + " maybe · " + sc + " not a fit";
+  var cfg = [
+    { key: "slam",  label: "★ Slam dunks — auto-stock, no reading required" },
+    { key: "yes",   label: "● Read before the fair" },
+    { key: "maybe", label: "◐ Keep on your radar" }
   ];
-  let html = '';
+  var html = "";
   cfg.forEach(function(c) {
     if (!groups[c.key].length) return;
-    html += '<div class="section-block section-' + c.key + '"><span class="section-head">' + c.label + '</span>';
+    html += "<div class=\"section-block section-" + c.key + "\"><span class=\"section-head\">" + c.label + "</span>";
     groups[c.key].forEach(function(book) {
-      const tags = (book.signals || []).map(s => '<span class="tag">' + esc(s) + '</span>').join('');
-      const pubstr = book.pubdate ? '<span style="font-family:DM Mono,monospace;font-size:10px;color:var(--muted);margin-left:6px">' + esc(book.pubdate) + '</span>' : '';
-      html += '<div class="book-row">';
-      html += '<div class="book-row-top"><span class="book-row-title">' + esc(book.title) + '</span>';
-      html += (book.author ? '<span class="book-row-author">' + esc(book.author) + '</span>' : '') + pubstr + '</div>';
-      html += '<div class="book-row-why">' + esc(book.reason) + '</div>';
-      html += (tags ? '<div class="tag-row">' + tags + '</div>' : '');
-      html += '</div>';
+      var tags = (book.signals||[]).map(function(s) { return "<span class=\"tag\">" + esc(s) + "</span>"; }).join("");
+      var pubstr = book.pubdate ? "<span class=\"book-row-pubdate\">" + esc(book.pubdate) + "</span>" : "";
+      html += "<div class=\"book-row\">";
+      html += "<div class=\"book-row-top\"><span class=\"book-row-title\">" + esc(book.title) + "</span>";
+      html += (book.author ? "<span class=\"book-row-author\">" + esc(book.author) + "</span>" : "") + pubstr + "</div>";
+      html += "<div class=\"book-row-why\">" + esc(book.reason) + "</div>";
+      html += (tags ? "<div class=\"tag-row\">" + tags + "</div>" : "");
+      html += "</div>";
     });
-    html += '</div>';
+    html += "</div>";
   });
   if (sc > 0) {
-    const filteredOut = window.filteredOutCount || 0;
-    const filteredMsg = filteredOut > 0 ? ' · ' + filteredOut + ' removed automatically (board books, picture books, puzzles, non-English editions, etc.)' : '';
-    html += '<div class="section-block section-skip" style="margin-top:8px"><span class="section-head">✕ ' + sc + ' title' + (sc !== 1 ? 's' : '') + ' screened but not a fit for this fair' + filteredMsg + '</span></div>';
-  } else if (window.filteredOutCount > 0) {
-    html += '<div class="section-block section-skip" style="margin-top:8px"><span class="section-head">' + window.filteredOutCount + ' titles removed automatically (board books, picture books, puzzles, non-English editions, etc.)</span></div>';
+    html += "<div class=\"section-block section-skip\">";
+    html += "<span class=\"section-head\">✕ " + sc + " title" + (sc !== 1 ? "s" : "") + " screened but not a fit for this fair";
+    if (filteredOutCount > 0) html += " · " + filteredOutCount + " removed automatically (board books, picture books, puzzles, non-English editions, etc.)";
+    html += "</span></div>";
+  } else if (filteredOutCount > 0) {
+    html += "<div class=\"section-block section-skip\">";
+    html += "<span class=\"section-head\">" + filteredOutCount + " titles removed automatically (board books, picture books, puzzles, non-English editions, etc.)</span>";
+    html += "</div>";
   }
-  document.getElementById('resultsList').innerHTML = html;
-  document.getElementById('results').classList.add('active');
-  document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-function stripCitations(s) {
-  // Remove <cite ...>...</cite> tags that leak in from web search results
-  return String(s || '').replace(/<cite[^>]*>(.*?)<\/cite>/gi, '$1').replace(/<[^>]+>/g, '');
-}
-function esc(s) {
-  return stripCitations(String(s || '')).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  document.getElementById("resultsList").innerHTML = html;
+  document.getElementById("results").classList.add("active");
+  document.getElementById("results").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function exportCSV() {
-  const shortlist = lastResults.filter(b => b.verdict === 'slam' || b.verdict === 'yes' || b.verdict === 'maybe');
+  var shortlist = lastResults.filter(function(b) { return b.verdict === "slam" || b.verdict === "yes" || b.verdict === "maybe"; });
   if (!shortlist.length) return;
-  const rows = [['Title','Author','Pub Date','Priority','Reason']];
+  var rows = [["Title","Author","Pub Date","Priority","Reason"]];
   shortlist.forEach(function(b) {
-    const priority = b.verdict === 'slam' ? 'Slam dunk' : b.verdict === 'yes' ? 'Read it' : 'Watch';
+    var priority = b.verdict === "slam" ? "Slam dunk" : b.verdict === "yes" ? "Read it" : "Watch";
     rows.push([
-      '"' + (b.title||'').replace(/"/g,'""') + '"',
-      '"' + (b.author||'').replace(/"/g,'""') + '"',
-      '"' + (b.pubdate||'').replace(/"/g,'""') + '"',
+      "\"" + (b.title||"").replace(/"/g, "\"\"") + "\"",
+      "\"" + (b.author||"").replace(/"/g, "\"\"") + "\"",
+      "\"" + (b.pubdate||"").replace(/"/g, "\"\"") + "\"",
       priority,
-      '"' + (b.reason||'').replace(/"/g,'""') + '"'
+      "\"" + (b.reason||"").replace(/"/g, "\"\"") + "\""
     ]);
   });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([rows.map(r => r.join(',')).join('\n')], { type: 'text/csv' }));
-  a.download = 'reading-list-' + new Date().toISOString().slice(0,10) + '.csv';
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([rows.map(function(r) { return r.join(","); }).join("\n")], { type: "text/csv" }));
+  a.download = "reading-list-" + new Date().toISOString().slice(0,10) + ".csv";
   a.click();
 }
 
 // Drag and drop
-const dz = document.getElementById('dropZone');
-dz.addEventListener('dragover', function(e) { e.preventDefault(); dz.classList.add('drag-over'); });
-dz.addEventListener('dragleave', function() { dz.classList.remove('drag-over'); });
-dz.addEventListener('drop', function(e) {
-  e.preventDefault();
-  dz.classList.remove('drag-over');
-  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
-});
+var dz = document.getElementById("dropZone");
+dz.addEventListener("dragover", function(e) { e.preventDefault(); dz.classList.add("drag-over"); });
+dz.addEventListener("dragleave", function() { dz.classList.remove("drag-over"); });
+dz.addEventListener("drop", function(e) { e.preventDefault(); dz.classList.remove("drag-over"); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
 
-document.getElementById('lookupTitle').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLookup(); });
-document.getElementById('lookupAuthor').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLookup(); });
-document.getElementById('lookupPubdate').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLookup(); });
+// Enter key support
+document.getElementById("lookupTitle").addEventListener("keydown", function(e) { if (e.key === "Enter") doLookup(); });
+document.getElementById("lookupAuthor").addEventListener("keydown", function(e) { if (e.key === "Enter") doLookup(); });
+document.getElementById("lookupPubdate").addEventListener("keydown", function(e) { if (e.key === "Enter") doLookup(); });
 </script>
 </body>
 </html>
