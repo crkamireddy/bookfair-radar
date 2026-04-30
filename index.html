@@ -279,7 +279,7 @@ async function doLookup() {
   document.getElementById('loadingSub').textContent = '';
   try {
     const prompt = 'Single title lookup:\nTitle: ' + title + (author ? '\nAuthor: ' + author : '');
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('https://book-radar-worker.catreading.workers.dev', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -479,7 +479,7 @@ async function analyzeFile() {
         (t.format ? ' [' + t.format + ']' : '') +
         (t.pubdate ? ' pub:' + t.pubdate : '')
       ).join('\n');
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      const res = await fetch('https://book-radar-worker.catreading.workers.dev', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
